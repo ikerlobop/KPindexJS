@@ -1,5 +1,4 @@
-
-// URL de la API de NOAA para el índice Kp
+// URL de la API de NOAA
 const url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json";
 
 // Función para obtener los últimos 20 valores del índice Kp
