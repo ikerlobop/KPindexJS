@@ -83,7 +83,7 @@ async function actualizarTabla() {
     });
 
     // Mostrar el tipo de tormenta para el último valor
-    const ultimoKP = kpData[0].estimated_kp;  // Último valor de Kp (el más reciente)
+    const ultimoKP = kpData[19].estimated_kp;  // Último valor de Kp (el más reciente)
     const tipoTormenta = determinarTipoTormenta(ultimoKP);
 
     // Actualizar el valor del índice Kp y el tipo de tormenta en el HTML
