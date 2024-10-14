@@ -58,3 +58,48 @@ tr:hover {
         font-size: 1.5em;
     }
 }
+/* Estilo general para el contenedor de tipo de tormenta */
+#tipoTormenta {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 1.5em;
+    color: #333;
+    background-color: #ffffff;
+    padding: 15px;
+    border: 2px solid #4CAF50;
+    border-radius: 8px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#tipoTormenta span {
+    font-weight: bold;
+}
+
+#kpValor {
+    color: #ff5722; /* Color diferente para el valor del índice Kp */
+    font-size: 1.5em;
+}
+
+/* Colores dinámicos para el tipo de tormenta */
+.kp-alerta-leve {
+    color: #FFEB3B; /* Amarillo para tormenta leve */
+}
+
+.kp-alerta-moderada {
+    color: #FF9800; /* Naranja para tormenta moderada */
+}
+
+.kp-alerta-fuerte {
+    color: #FF5722; /* Rojo para tormenta fuerte */
+}
+
+.kp-alerta-extrema {
+    color: #D32F2F; /* Rojo oscuro para tormenta extrema */
+}
+
+.sin-tormenta {
+    color: #4CAF50; /* Verde para sin tormenta significativa */
+}
