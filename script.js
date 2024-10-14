@@ -42,7 +42,21 @@ async function actualizarTabla() {
 
         // Añadir la fila a la tabla
         tbody.appendChild(row);
-    });
+
+        // Centrar texto en celdas
+        fechaCell.style.textAlign = "center";
+        kpCell.style.textAlign = "center";
+
+        // Cambiar el color de la fila si el índice Kp es mayor o igual a 5
+        if (kpEstimated >= 5) {
+            row.style.kpcell.backgroundColor = "red"; 
+        }
+        else {
+            //verde claro si es menor a 5
+            row.style.backgroundColor = "lightgreen"; 
+        }
+    }
+    );
 }
 
 // Actualizar la tabla inicialmente y cada 60 segundos
