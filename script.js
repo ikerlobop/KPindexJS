@@ -6,7 +6,7 @@ async function obtenerUltimos20KP() {
     try {
         const response = await fetch(url);
         const kpData = await response.json();
-        return kpData.slice(0, 20);  // Tomamos solo los últimos 20
+        return kpData.slice(0, 20);
     } catch (error) {
         console.error("Error al obtener los datos del índice Kp:", error);
         return [];
@@ -24,9 +24,7 @@ async function actualizarTabla() {
     // Insertar los datos en la tabla
     kpData.forEach(kp => {
         const fecha = new Date(kp.time_tag).toLocaleString();  // Formatear la fecha
-        const kpEstimated = kp.estimated_kp;  // Índice Kp estimado
-
-        // Crear una nueva fila para la tabla
+        const kpEstimated = kp.estimated_kp;  
         const row = document.createElement("tr");
 
         // Crear las celdas
@@ -48,16 +46,14 @@ async function actualizarTabla() {
 
         // Cambiar el color de la fila si el índice Kp es mayor o igual a 5
         if (kpEstimated >= 5) {
-            row.style.kpcell.backgroundColor = "red"; 
-        }
-        else {
-            //verde claro si es menor a 5
+            row.style.backgroundColor = "red"; 
+            kpCell.style.color = "white";     
+        } else {
             row.style.backgroundColor = "lightgreen"; 
         }
-    }
-    );
+    });
 }
 
-// Actualizar la tabla inicialmente y cada 60 segundos
+// Actualizar la tabla
 actualizarTabla();
-setInterval(actualizarTabla, 60000);  // Actualizar cada 60 segundos
+setInterval(actualizarTabla, 60000);  
