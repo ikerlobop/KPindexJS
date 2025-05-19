@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Índice Kp</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
     <h1>Últimos 20 valores del índice Kp</h1>
+
     <table id="kpTable">
         <thead>
             <tr>
@@ -17,26 +17,19 @@
                 <th>Índice Kp (Estimado)</th>
             </tr>
         </thead>
-        <thead>
-            <tr>
-                <th>Fecha y Hora</th>
-                <th>Índice Kp (Estimado)</th>
-                <th>Visualización</th> <!-- Nueva columna -->
-            </tr>
-        </thead>
         <tbody>
-            <!--Datos-->
+            <!-- Datos dinámicos -->
         </tbody>
     </table>
 
-    <!--Tipo de tormenta geomagnética-->
     <div id="tipoTormenta">
-    <p>Último valor del índice Kp:<span id="kpValor"></span></p>
-    <p>Tipo de tormenta: <span id="kpTormenta"></span></p>
-    
+        <p>Último valor del índice Kp: <span id="kpValor"></span></p>
+        <p>Tipo de tormenta: <span id="kpTormenta"></span></p>
     </div>
+
+    <h2 style="text-align:center;">Gráfico del Índice Kp</h2>
+    <canvas id="kpChart" style="max-width: 90%; margin: auto; display: block;"></canvas>
 
     <script src="script.js"></script>
 </body>
-
 </html>

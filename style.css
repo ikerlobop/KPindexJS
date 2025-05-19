@@ -21,7 +21,7 @@ table {
 }
 
 th, td {
-    padding: 5px 5px;
+    padding: 5px;
     text-align: center;
     border: 1px solid #aaa;
 }
@@ -58,7 +58,7 @@ tr:hover {
         font-size: 1.5em;
     }
 }
-/* Estilo general para el contenedor de tipo de tormenta */
+
 #tipoTormenta {
     margin-top: 30px;
     text-align: center;
@@ -79,50 +79,26 @@ tr:hover {
 }
 
 #kpValor {
-    color: #ff5722; /* Color diferente para el valor del índice Kp */
+    color: #ff5722;
     font-size: 1.5em;
 }
 
-/* Colores dinámicos para el tipo de tormenta */
 .kp-alerta-leve {
-    color: #FFEB3B; /* Amarillo para tormenta leve */
+    color: #FFEB3B;
 }
 
 .kp-alerta-moderada {
-    color: #FF9800; /* Naranja para tormenta moderada */
+    color: #FF9800;
 }
 
 .kp-alerta-fuerte {
-    color: #FF5722; /* Rojo para tormenta fuerte */
+    color: #FF5722;
 }
 
 .kp-alerta-extrema {
-    color: #D32F2F; /* Rojo oscuro para tormenta extrema */
+    color: #D32F2F;
 }
 
 .sin-tormenta {
-    color: #4CAF50; /* Verde para sin tormenta significativa */
+    color: #4CAF50;
 }
-
-.barra-kp {
-    height: 20px;
-    border-radius: 4px;
-    background-color: #4CAF50;
-}
-
-.kp-bar-container {
-    width: 100%;
-    height: 20px;
-    background-color: #eee;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.kp1 { background-color: #4CAF50; }
-.kp2 { background-color: #8BC34A; }
-.kp3 { background-color: #CDDC39; }
-.kp4 { background-color: #FFC107; }
-.kp5 { background-color: #FF9800; }
-.kp6 { background-color: #FF5722; }
-.kp7 { background-color: #F44336; }
-.kp8, .kp9 { background-color: #D32F2F; }
