@@ -207,7 +207,11 @@
             tbody.innerHTML = '';
 
             kpData.forEach(kp => {
-                const fecha = new Date(kp.time_tag).toLocaleString();
+                const fecha = new Date(kp.time_tag).toLocaleTimeString('es-ES', {
+                        timeZone: 'Europe/Madrid',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                });
                 const kpEstimated = kp.estimated_kp;
 
                 const row = document.createElement("tr");
