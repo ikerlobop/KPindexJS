@@ -4,7 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Índice Kp</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        table {
+            width: 80%;
+            margin: 0 auto 30px;
+            border-collapse: collapse;
+            background-color: black;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #aaa;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        td {
+            color: #555;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e1f5e0;
+        }
+
+        #tipoTormenta {
+            margin: 30px auto;
+            width: 80%;
+            text-align: center;
+            font-size: 1.5em;
+            color: #333;
+            background-color: #fff;
+            padding: 15px;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #tipoTormenta span {
+            font-weight: bold;
+        }
+
+        #kpValor {
+            color: #ff5722;
+            font-size: 1.5em;
+        }
+
+        .kp-alerta-leve { color: #FFEB3B; }
+        .kp-alerta-moderada { color: #FF9800; }
+        .kp-alerta-fuerte { color: #FF5722; }
+        .kp-alerta-extrema { color: #D32F2F; }
+        .sin-tormenta { color: #4CAF50; }
+
+        canvas {
+            display: block;
+            margin: 0 auto 30px;
+            max-width: 90%;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -18,7 +95,7 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Datos dinámicos -->
+            <!-- Se rellena por JavaScript -->
         </tbody>
     </table>
 
@@ -27,9 +104,141 @@
         <p>Tipo de tormenta: <span id="kpTormenta"></span></p>
     </div>
 
-    <h2 style="text-align:center;">Gráfico del Índice Kp</h2>
-    <canvas id="kpChart" style="max-width: 90%; margin: auto; display: block;"></canvas>
+    <h2>Gráfico del Índice Kp</h2>
+    <canvas id="kpChart"></canvas>
 
-    <script src="script.js"></script>
+    <script>
+        const url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json";
+        let chartInstance = null;
+
+        async function obtenerUltimos20KP() {
+            try {
+                const response = await fetch(url);
+                const kpData = await response.json();
+                return kpData.slice(0, 20);
+            } catch (error) {
+                console.error("Error al obtener los datos del índice Kp:", error);
+                return [];
+            }
+        }
+
+        function determinarTipoTormenta(kpEstimated) {
+            const tipoTormentaElem = document.getElementById("kpTormenta");
+            tipoTormentaElem.className = "";
+
+            if (kpEstimated >= 8) {
+                tipoTormentaElem.classList.add("kp-alerta-extrema");
+                return "Tormenta extrema (G4/G5)";
+            } else if (kpEstimated == 7) {
+                tipoTormentaElem.classList.add("kp-alerta-fuerte");
+                return "Tormenta fuerte (G3)";
+            } else if (kpEstimated == 6) {
+                tipoTormentaElem.classList.add("kp-alerta-moderada");
+                return "Tormenta moderada (G2)";
+            } else if (kpEstimated == 5) {
+                tipoTormentaElem.classList.add("kp-alerta-leve");
+                return "Tormenta leve (G1)";
+            } else {
+                tipoTormentaElem.classList.add("sin-tormenta");
+                return "Sin tormenta geomagnética significativa";
+            }
+        }
+
+        function renderizarGrafico(kpData) {
+            const ctx = document.getElementById("kpChart").getContext("2d");
+
+            const labels = kpData.map(kp => new Date(kp.time_tag).toLocaleString()).reverse();
+            const valores = kpData.map(kp => kp.estimated_kp).reverse();
+            const colores = valores.map(v => {
+                if (v >= 8) return "#D32F2F";
+                if (v === 7) return "#F44336";
+                if (v === 6) return "#FF9800";
+                if (v === 5) return "#FFEB3B";
+                return "#4CAF50";
+            });
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Índice Kp',
+                        data: valores,
+                        backgroundColor: colores
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `Kp: ${ctx.raw}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 9,
+                            title: {
+                                display: true,
+                                text: "Valor Kp"
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function actualizarTabla() {
+            const kpData = await obtenerUltimos20KP();
+            const tbody = document.querySelector("#kpTable tbody");
+            tbody.innerHTML = '';
+
+            kpData.forEach(kp => {
+                const fecha = new Date(kp.time_tag).toLocaleString();
+                const kpEstimated = kp.estimated_kp;
+
+                const row = document.createElement("tr");
+                const fechaCell = document.createElement("td");
+                fechaCell.textContent = fecha;
+
+                const kpCell = document.createElement("td");
+                kpCell.textContent = kpEstimated;
+
+                row.appendChild(fechaCell);
+                row.appendChild(kpCell);
+
+                if (kpEstimated >= 5) {
+                    row.style.backgroundColor = "red";
+                    kpCell.style.color = "white";
+                } else {
+                    row.style.backgroundColor = "lightgreen";
+                }
+
+                tbody.appendChild(row);
+            });
+
+            const ultimoKP = kpData[19].estimated_kp;
+            document.getElementById("kpValor").textContent = ultimoKP;
+            document.getElementById("kpTormenta").textContent = determinarTipoTormenta(ultimoKP);
+
+            renderizarGrafico(kpData);
+        }
+
+        actualizarTabla();
+        setInterval(actualizarTabla, 60000);
+    </script>
 </body>
 </html>
