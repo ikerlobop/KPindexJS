@@ -91,6 +91,21 @@ async function actualizarTabla() {
     document.getElementById("kpTormenta").textContent = tipoTormenta;
 }
 
+const barraCell = document.createElement("td");
+const contenedorBarra = document.createElement("div");
+contenedorBarra.classList.add("kp-bar-container");
+
+const barra = document.createElement("div");
+barra.classList.add("barra-kp", `kp${Math.floor(kpEstimated)}`); // clase dinámica
+barra.style.width = `${(kpEstimated / 9) * 100}%`;
+
+contenedorBarra.appendChild(barra);
+barraCell.appendChild(contenedorBarra);
+
+// Añadir la nueva celda al final de la fila
+row.appendChild(barraCell);
+
+
 // Actualizar la tabla cada 60 segundos
 actualizarTabla();
 setInterval(actualizarTabla, 60000);  
