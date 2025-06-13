@@ -4,83 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Índice Kp</title>
+    <!-- Paleta de colores basada en la escala oficial NOAA para tormentas geomagnéticas -->
     <style>
+        :root {
+            --kp-quiet: #43a047;       /* Kp 0‑3 */
+            --kp-unsettled: #c0ca33;   /* Kp 4   */
+            --kp-g1: #ffeb3b;          /* Kp 5   */
+            --kp-g2: #ff9800;          /* Kp 6   */
+            --kp-g3: #f44336;          /* Kp 7   */
+            --kp-g4g5: #b71c1c;        /* Kp 8‑9 */
+            --bg-light: #f4f4f9;
+            --text-base: #333;
+            --shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background: var(--bg-light);
             margin: 0;
-            padding: 10px;
+            padding: 16px;
+            color: var(--text-base);
         }
 
-        h1, h2 {
-            text-align: center;
-            color: #333;
-        }
+        h1, h2 { text-align: center; margin: 0 0 1rem; }
 
+        /* Tabla */
         table {
-            width: 80%;
-            margin: 0 auto 30px;
+            width: 100%;
+            max-width: 920px;
+            margin: 0 auto 2rem;
             border-collapse: collapse;
-            background-color: black;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #fff;
+            box-shadow: var(--shadow);
         }
+        th, td { padding: 0.5rem; text-align: center; border: 1px solid #ddd; }
+        th { background: var(--kp-unsettled); color: #fff; }
+        tr:nth-child(even) { background: #fafafa; }
+        tr:hover { filter: brightness(0.95); }
 
-        th, td {
-            padding: 5px;
-            text-align: center;
-            border: 1px solid #aaa;
-        }
-
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        td {
-            color: #555;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        tr:hover {
-            background-color: #e1f5e0;
-        }
-
+        /* Panel último valor */
         #tipoTormenta {
-            margin: 30px auto;
-            width: 80%;
-            text-align: center;
-            font-size: 1.5em;
-            color: #333;
-            background-color: #fff;
-            padding: 15px;
-            border: 2px solid #4CAF50;
+            width: 100%;
+            max-width: 920px;
+            margin: 0 auto 2rem;
+            padding: 1rem;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #fff;
+            box-shadow: var(--shadow);
+            font-size: 1.1rem;
+            text-align: center;
         }
+        #kpValor { font-weight: bold; font-size: 1.4rem; }
 
-        #tipoTormenta span {
-            font-weight: bold;
-        }
+        /* Clases de texto */
+        .lvl-quiet   { color: var(--kp-quiet); }
+        .lvl-unset   { color: var(--kp-unsettled); }
+        .lvl-g1      { color: var(--kp-g1); }
+        .lvl-g2      { color: var(--kp-g2); }
+        .lvl-g3      { color: var(--kp-g3); }
+        .lvl-g4g5    { color: var(--kp-g4g5); }
 
-        #kpValor {
-            color: #ff5722;
-            font-size: 1.5em;
-        }
-
-        .kp-alerta-leve { color: #FFEB3B; }
-        .kp-alerta-moderada { color: #FF9800; }
-        .kp-alerta-fuerte { color: #FF5722; }
-        .kp-alerta-extrema { color: #D32F2F; }
-        .sin-tormenta { color: #4CAF50; }
-
-        canvas {
-            display: block;
-            margin: 0 auto 30px;
-            max-width: 90%;
-        }
+        canvas { display: block; margin: 0 auto 3rem; max-width: 95%; height: 420px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -91,12 +75,10 @@
         <thead>
             <tr>
                 <th>Fecha y Hora</th>
-                <th>Índice Kp (Estimado)</th>
+                <th>Índice Kp (Real)</th>
             </tr>
         </thead>
-        <tbody>
-            <!-- Se rellena por JavaScript -->
-        </tbody>
+        <tbody></tbody>
     </table>
 
     <div id="tipoTormenta">
@@ -109,138 +91,122 @@
 
     <script>
         const url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json";
-        let chartInstance = null;
+        let chartInstance;
 
+        /* === Utilidades de color y clasificación === */
+        const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+
+        function colorPorKP(v) {
+            if (v >= 8) return css('--kp-g4g5');
+            if (v >= 7) return css('--kp-g3');
+            if (v >= 6) return css('--kp-g2');
+            if (v >= 5) return css('--kp-g1');
+            if (v >= 4) return css('--kp-unsettled');
+            return css('--kp-quiet');
+        }
+
+        function claseTextoPorKP(v) {
+            if (v >= 8) return 'lvl-g4g5';
+            if (v >= 7) return 'lvl-g3';
+            if (v >= 6) return 'lvl-g2';
+            if (v >= 5) return 'lvl-g1';
+            if (v >= 4) return 'lvl-unset';
+            return 'lvl-quiet';
+        }
+
+        function determinarTipoTormenta(kp) {
+            if (kp >= 8)  return "Tormenta extrema (G4/G5)";
+            if (kp >= 7)  return "Tormenta fuerte (G3)";
+            if (kp >= 6)  return "Tormenta moderada (G2)";
+            if (kp >= 5)  return "Tormenta leve (G1)";
+            if (kp >= 4)  return "Condiciones inestables";
+            return "Sin tormenta geomagnética significativa";
+        }
+
+        /* === Petición de datos === */
         async function obtenerUltimos20KP() {
             try {
                 const response = await fetch(url);
-                const kpData = await response.json();
-                return kpData.slice(0, 20);
-            } catch (error) {
-                console.error("Error al obtener los datos del índice Kp:", error);
+                const data = await response.json();
+                return data.slice(0, 20);
+            } catch (err) {
+                console.error('Error al obtener los datos del índice Kp:', err);
                 return [];
             }
         }
 
-        function determinarTipoTormenta(kpEstimated) {
-            const tipoTormentaElem = document.getElementById("kpTormenta");
-            tipoTormentaElem.className = "";
-
-            if (kpEstimated >= 8) {
-                tipoTormentaElem.classList.add("kp-alerta-extrema");
-                return "Tormenta extrema (G4/G5)";
-            } else if (kpEstimated == 7) {
-                tipoTormentaElem.classList.add("kp-alerta-fuerte");
-                return "Tormenta fuerte (G3)";
-            } else if (kpEstimated == 6) {
-                tipoTormentaElem.classList.add("kp-alerta-moderada");
-                return "Tormenta moderada (G2)";
-            } else if (kpEstimated == 5) {
-                tipoTormentaElem.classList.add("kp-alerta-leve");
-                return "Tormenta leve (G1)";
-            } else {
-                tipoTormentaElem.classList.add("sin-tormenta");
-                return "Sin tormenta geomagnética significativa";
-            }
-        }
-
+        /* === Renderizado de gráfico === */
         function renderizarGrafico(kpData) {
-            const ctx = document.getElementById("kpChart").getContext("2d");
+            const ctx = document.getElementById('kpChart').getContext('2d');
+            const labels  = kpData.map(kp => new Date(kp.time_tag).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })).reverse();
+            const valores = kpData.map(kp => kp.estimated_kp).reverse(); // decimales reales
+            const colores = kpData.map(kp => colorPorKP(Math.round(kp.estimated_kp))).reverse();
 
-            const labels = kpData.map(kp => new Date(kp.time_tag).toLocaleString()).reverse();
-            const valores = kpData.map(kp => kp.estimated_kp).reverse();
-            const colores = valores.map(v => {
-                if (v >= 8) return "#D32F2F";
-                if (v === 7) return "#F44336";
-                if (v === 6) return "#FF9800";
-                if (v === 5) return "#FFEB3B";
-                return "#4CAF50";
-            });
-
-            if (chartInstance) chartInstance.destroy();
-
+            chartInstance?.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Índice Kp',
-                        data: valores,
-                        backgroundColor: colores
-                    }]
-                },
+                data: { labels, datasets: [{ data: valores, backgroundColor: colores }] },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => `Kp: ${ctx.raw}`
-                            }
-                        }
+                        tooltip: { callbacks: { label: ctx => `Kp: ${ctx.raw.toFixed(2)}` } }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             max: 9,
-                            title: {
-                                display: true,
-                                text: "Valor Kp"
-                            }
+                            ticks: { stepSize: 1 },
+                            title: { display: true, text: 'Valor Kp' },
+                            grid: { color: '#e0e0e0' }
                         },
                         x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45,
-                                autoSkip: true,
-                                maxTicksLimit: 20
-                            }
+                            ticks: { maxRotation: 45, minRotation: 45, autoSkip: true, maxTicksLimit: 20 },
+                            grid: { display: false }
                         }
                     }
                 }
             });
         }
 
+        /* === Tabla y panel principal === */
         async function actualizarTabla() {
             const kpData = await obtenerUltimos20KP();
-            const tbody = document.querySelector("#kpTable tbody");
+            const tbody  = document.querySelector('#kpTable tbody');
             tbody.innerHTML = '';
 
-            kpData.forEach(kp => {
-                const fecha = new Date(kp.time_tag).toLocaleTimeString('es-ES', {
-                        timeZone: 'Europe/Madrid',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                });
-                const kpEstimated = kp.estimated_kp;
+            kpData.forEach(k => {
+                const fechaTxt = new Date(k.time_tag).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
+                const kpRaw    = k.estimated_kp;
+                const kpRnd    = Math.round(kpRaw);
 
-                const row = document.createElement("tr");
-                const fechaCell = document.createElement("td");
-                fechaCell.textContent = fecha;
+                const tr = document.createElement('tr');
+                tr.style.backgroundColor = colorPorKP(kpRnd) + '33'; // 20 % opacidad
 
-                const kpCell = document.createElement("td");
-                kpCell.textContent = kpEstimated;
+                const tdFecha = document.createElement('td'); tdFecha.textContent = fechaTxt;
+                const tdKp    = document.createElement('td'); tdKp.textContent = kpRaw.toFixed(2);
 
-                row.appendChild(fechaCell);
-                row.appendChild(kpCell);
-
-                if (kpEstimated >= 5) {
-                    row.style.backgroundColor = "red";
-                    kpCell.style.color = "white";
-                } else {
-                    row.style.backgroundColor = "lightgreen";
-                }
-
-                tbody.appendChild(row);
+                tr.append(tdFecha, tdKp);
+                tbody.appendChild(tr);
             });
 
-            const ultimoKP = kpData[19].estimated_kp;
-            document.getElementById("kpValor").textContent = ultimoKP;
-            document.getElementById("kpTormenta").textContent = determinarTipoTormenta(ultimoKP);
+            const ultimoRaw = kpData[0]?.estimated_kp ?? 0;
+            const ultimoRnd = Math.round(ultimoRaw);
 
+            const kpValor = document.getElementById('kpValor');
+            kpValor.textContent = ultimoRaw.toFixed(2);
+            kpValor.className = claseTextoPorKP(ultimoRnd);
+
+            const kpTormenta = document.getElementById('kpTormenta');
+            kpTormenta.textContent = determinarTipoTormenta(ultimoRnd);
+            kpTormenta.className = claseTextoPorKP(ultimoRnd);
+
+            // Renderizamos el gráfico con los nuevos datos
             renderizarGrafico(kpData);
         }
 
+        // Carga inicial y refresco cada minuto
         actualizarTabla();
         setInterval(actualizarTabla, 60000);
     </script>
