@@ -64,7 +64,13 @@
         .lvl-g3      { color: var(--kp-g3); }
         .lvl-g4g5    { color: var(--kp-g4g5); }
 
-        canvas { display: block; margin: 0 auto 3rem; max-width: 95%; height: 420px; }
+        /* ======== Ajuste del tamaño del gráfico ======== */
+        canvas#kpChart {
+            display: block;
+            margin: 0 auto 2rem;
+            max-width: 75%;   /* más estrecho */
+            height: 260px;    /* más bajo */
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -202,11 +208,10 @@
             kpTormenta.textContent = determinarTipoTormenta(ultimoRnd);
             kpTormenta.className = claseTextoPorKP(ultimoRnd);
 
-            // Renderizamos el gráfico con los nuevos datos
+            // Renderizamos
             renderizarGrafico(kpData);
         }
 
-        // Carga inicial y refresco cada minuto
         actualizarTabla();
         setInterval(actualizarTabla, 60000);
     </script>
