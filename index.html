@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Índice Kp</title>
-    <!-- Paleta de colores basada en la escala oficial NOAA para tormentas geomagnéticas -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monitor Índice Kp en Tiempo Real</title>
+
+    <!-- ========= Paleta de colores NOAA ========= -->
     <style>
         :root {
             --kp-quiet: #43a047;       /* Kp 0‑3 */
@@ -15,7 +16,7 @@
             --kp-g4g5: #b71c1c;        /* Kp 8‑9 */
             --bg-light: #f4f4f9;
             --text-base: #333;
-            --shadow: 0 2px 5px rgba(0,0,0,0.1);
+            --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         body {
@@ -26,9 +27,12 @@
             color: var(--text-base);
         }
 
-        h1, h2 { text-align: center; margin: 0 0 1rem; }
+        h1, h2 {
+            text-align: center;
+            margin: 0 0 1rem;
+        }
 
-        /* Tabla */
+        /* ====== Tablas ====== */
         table {
             width: 100%;
             max-width: 920px;
@@ -37,12 +41,23 @@
             background: #fff;
             box-shadow: var(--shadow);
         }
-        th, td { padding: 0.5rem; text-align: center; border: 1px solid #ddd; }
-        th { background: var(--kp-unsettled); color: #fff; }
-        tr:nth-child(even) { background: #fafafa; }
-        tr:hover { filter: brightness(0.95); }
+        th, td {
+            padding: 0.5rem;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: var(--kp-unsettled);
+            color: #fff;
+        }
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+        tr:hover {
+            filter: brightness(0.95);
+        }
 
-        /* Panel último valor */
+        /* ====== Panel último valor ====== */
         #tipoTormenta {
             width: 100%;
             max-width: 920px;
@@ -54,29 +69,74 @@
             font-size: 1.1rem;
             text-align: center;
         }
-        #kpValor { font-weight: bold; font-size: 1.4rem; }
-
-        /* Clases de texto */
-        .lvl-quiet   { color: var(--kp-quiet); }
-        .lvl-unset   { color: var(--kp-unsettled); }
-        .lvl-g1      { color: var(--kp-g1); }
-        .lvl-g2      { color: var(--kp-g2); }
-        .lvl-g3      { color: var(--kp-g3); }
-        .lvl-g4g5    { color: var(--kp-g4g5); }
-
-        /* ======== Ajuste del tamaño del gráfico ======== */
-        canvas#kpChart {
-            display: block;
-            margin: 0 auto 2rem;
-            max-width: 75%;   /* más estrecho */
-            height: 260px;    /* más bajo */
+        #kpValor {
+            font-weight: bold;
+            font-size: 1.4rem;
         }
+
+        /* ====== Escala horizontal ====== */
+        #kpScaleWrapper {
+            max-width: 640px;
+            margin: 0 auto 2rem;
+        }
+        #kpScale {
+            display: flex;
+            gap: 2px;
+        }
+        .kp-segment {
+            flex: 1;
+            height: 36px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #000;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .kp-active {
+            box-shadow: 0 0 0 3px #000 inset;
+            transform: scale(1.1);
+            font-weight: bold;
+        }
+
+        /* ====== Clases de texto ====== */
+        .lvl-quiet  { color: var(--kp-quiet); }
+        .lvl-unset  { color: var(--kp-unsettled); }
+        .lvl-g1     { color: var(--kp-g1); }
+        .lvl-g2     { color: var(--kp-g2); }
+        .lvl-g3     { color: var(--kp-g3); }
+        .lvl-g4g5   { color: var(--kp-g4g5); }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Últimos 20 valores del índice Kp</h1>
+    <h1>Monitor Índice Kp en Tiempo Real</h1>
 
+    <!-- ========= ESCALA HORIZONTAL (arriba) ========= -->
+    <h2>Escala geomagnética actual</h2>
+    <div id="kpScaleWrapper">
+        <div id="kpScale"></div>
+    </div>
+
+    <!-- ========= FECHA Y HORA ESPAÑOLA ========= -->
+    <h2>Fecha y hora actual (Europa/Madrid)</h2>
+    <table id="timeTable">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="fechaActual"></td>
+                <td id="horaActual"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ========= TABLA KP ========= -->
+    <h2>Últimos 20 valores del índice Kp</h2>
     <table id="kpTable">
         <thead>
             <tr>
@@ -87,49 +147,46 @@
         <tbody></tbody>
     </table>
 
+    <!-- ========= PANEL PRINCIPAL ========= -->
     <div id="tipoTormenta">
         <p>Último valor del índice Kp: <span id="kpValor"></span></p>
         <p>Tipo de tormenta: <span id="kpTormenta"></span></p>
     </div>
 
-    <h2>Gráfico del Índice Kp</h2>
-    <canvas id="kpChart"></canvas>
-
     <script>
+        /* ========= Config ========= */
         const url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json";
-        let chartInstance;
 
-        /* === Utilidades de color y clasificación === */
-        const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+        /* ========= Utilidades de color ========= */
+        const css = (k) => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+        const colorPorKP = (v) => v >= 8 ? css('--kp-g4g5') : v >= 7 ? css('--kp-g3') : v >= 6 ? css('--kp-g2') : v >= 5 ? css('--kp-g1') : v >= 4 ? css('--kp-unsettled') : css('--kp-quiet');
+        const claseTextoPorKP = (v) => v >= 8 ? 'lvl-g4g5' : v >= 7 ? 'lvl-g3' : v >= 6 ? 'lvl-g2' : v >= 5 ? 'lvl-g1' : v >= 4 ? 'lvl-unset' : 'lvl-quiet';
+        const determinarTipoTormenta = (kp) => kp >= 8 ? 'Tormenta extrema (G4/G5)' : kp >= 7 ? 'Tormenta fuerte (G3)' : kp >= 6 ? 'Tormenta moderada (G2)' : kp >= 5 ? 'Tormenta leve (G1)' : kp >= 4 ? 'Condiciones inestables' : 'Sin tormenta geomagnética significativa';
 
-        function colorPorKP(v) {
-            if (v >= 8) return css('--kp-g4g5');
-            if (v >= 7) return css('--kp-g3');
-            if (v >= 6) return css('--kp-g2');
-            if (v >= 5) return css('--kp-g1');
-            if (v >= 4) return css('--kp-unsettled');
-            return css('--kp-quiet');
+        /* ========= Escala Kp ========= */
+        function construirEscala() {
+            const kpScale = document.getElementById('kpScale');
+            kpScale.innerHTML = '';
+            for (let i = 0; i <= 9; i++) {
+                const seg = document.createElement('div');
+                seg.className = 'kp-segment';
+                seg.dataset.val = i;
+                seg.textContent = i;
+                seg.style.backgroundColor = colorPorKP(i);
+                kpScale.appendChild(seg);
+            }
         }
 
-        function claseTextoPorKP(v) {
-            if (v >= 8) return 'lvl-g4g5';
-            if (v >= 7) return 'lvl-g3';
-            if (v >= 6) return 'lvl-g2';
-            if (v >= 5) return 'lvl-g1';
-            if (v >= 4) return 'lvl-unset';
-            return 'lvl-quiet';
+        /* ========= Hora actual ========= */
+        function actualizarHora() {
+            const now = new Date();
+            const fechaOpts = { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Europe/Madrid' };
+            const horaOpts  = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Madrid' };
+            document.getElementById('fechaActual').textContent = now.toLocaleDateString('es-ES', fechaOpts);
+            document.getElementById('horaActual').textContent  = now.toLocaleTimeString('es-ES', horaOpts);
         }
 
-        function determinarTipoTormenta(kp) {
-            if (kp >= 8)  return "Tormenta extrema (G4/G5)";
-            if (kp >= 7)  return "Tormenta fuerte (G3)";
-            if (kp >= 6)  return "Tormenta moderada (G2)";
-            if (kp >= 5)  return "Tormenta leve (G1)";
-            if (kp >= 4)  return "Condiciones inestables";
-            return "Sin tormenta geomagnética significativa";
-        }
-
-        /* === Petición de datos === */
+        /* ========= Obtener datos ========= */
         async function obtenerUltimos20KP() {
             try {
                 const response = await fetch(url);
@@ -141,79 +198,47 @@
             }
         }
 
-        /* === Renderizado de gráfico === */
-        function renderizarGrafico(kpData) {
-            const ctx = document.getElementById('kpChart').getContext('2d');
-            const labels  = kpData.map(kp => new Date(kp.time_tag).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })).reverse();
-            const valores = kpData.map(kp => kp.estimated_kp).reverse(); // decimales reales
-            const colores = kpData.map(kp => colorPorKP(Math.round(kp.estimated_kp))).reverse();
-
-            chartInstance?.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels, datasets: [{ data: valores, backgroundColor: colores }] },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: ctx => `Kp: ${ctx.raw.toFixed(2)}` } }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 9,
-                            ticks: { stepSize: 1 },
-                            title: { display: true, text: 'Valor Kp' },
-                            grid: { color: '#e0e0e0' }
-                        },
-                        x: {
-                            ticks: { maxRotation: 45, minRotation: 45, autoSkip: true, maxTicksLimit: 20 },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        /* === Tabla y panel principal === */
-        async function actualizarTabla() {
+        /* ========= Actualizar UI ========= */
+        async function actualizarDatos() {
             const kpData = await obtenerUltimos20KP();
             const tbody  = document.querySelector('#kpTable tbody');
             tbody.innerHTML = '';
 
             kpData.forEach(k => {
                 const fechaTxt = new Date(k.time_tag).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
-                const kpRaw    = k.estimated_kp;
-                const kpRnd    = Math.round(kpRaw);
+                const kpRaw = k.estimated_kp;
+                const kpRnd = Math.round(kpRaw);
 
                 const tr = document.createElement('tr');
-                tr.style.backgroundColor = colorPorKP(kpRnd) + '33'; // 20 % opacidad
+                tr.style.backgroundColor = colorPorKP(kpRnd) + '33';
 
                 const tdFecha = document.createElement('td'); tdFecha.textContent = fechaTxt;
                 const tdKp    = document.createElement('td'); tdKp.textContent = kpRaw.toFixed(2);
-
                 tr.append(tdFecha, tdKp);
                 tbody.appendChild(tr);
             });
 
             const ultimoRaw = kpData[0]?.estimated_kp ?? 0;
             const ultimoRnd = Math.round(ultimoRaw);
+            const kpValorElem = document.getElementById('kpValor');
+            kpValorElem.textContent = ultimoRaw.toFixed(2);
+            kpValorElem.className = claseTextoPorKP(ultimoRnd);
 
-            const kpValor = document.getElementById('kpValor');
-            kpValor.textContent = ultimoRaw.toFixed(2);
-            kpValor.className = claseTextoPorKP(ultimoRnd);
+            const kpTormentaElem = document.getElementById('kpTormenta');
+            kpTormentaElem.textContent = determinarTipoTormenta(ultimoRnd);
+            kpTormentaElem.className = claseTextoPorKP(ultimoRnd);
 
-            const kpTormenta = document.getElementById('kpTormenta');
-            kpTormenta.textContent = determinarTipoTormenta(ultimoRnd);
-            kpTormenta.className = claseTextoPorKP(ultimoRnd);
-
-            // Renderizamos
-            renderizarGrafico(kpData);
+            document.querySelectorAll('.kp-segment').forEach(seg => {
+                seg.classList.toggle('kp-active', parseInt(seg.dataset.val, 10) === ultimoRnd);
+            });
         }
 
-        actualizarTabla();
-        setInterval(actualizarTabla, 60000);
+        /* ========= Init ========= */
+        construirEscala();
+        actualizarHora();
+        actualizarDatos();
+        setInterval(actualizarHora, 1000);
+        setInterval(actualizarDatos, 60000);
     </script>
 </body>
 </html>
