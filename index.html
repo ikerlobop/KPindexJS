@@ -198,7 +198,7 @@
 
         /* ========= Actualizar UI ========= */
         async function actualizarDatos() {
-            const kpData = await obtenerUltimos20KP();
+            const kpData = (await obtenerUltimos20KP()).reverse();
             const tbody  = document.querySelector('#kpTable tbody');
             tbody.innerHTML = '';
 
